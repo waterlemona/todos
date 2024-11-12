@@ -4,8 +4,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'todo.dart';
 import 'nut.dart';
 import 'my.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized(); // Firebase 초기화 전에 위젯 바인딩 준비
+  await Firebase.initializeApp(); // Firebase 초기화
   runApp(const MyApp());
 }
 
