@@ -3,6 +3,7 @@ plugins {
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -24,7 +25,7 @@ android {
         applicationId = "com.example.todo"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdkVersion rootProject.ext.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -38,7 +39,22 @@ android {
         }
     }
 }
+dependencies {
+    // Firebase BoM을 사용하여 Firebase SDK 의존성을 추가
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
+    // Firebase Analytics 추가
+    implementation("com.google.firebase:firebase-analytics")
+
+    // Firebase Authentication 추가
+    implementation("com.google.firebase:firebase-auth")
+
+    // Firebase Firestore 추가
+    implementation("com.google.firebase:firebase-firestore")
+
+    // 기타 Firebase 서비스 추가 가능
+}
 flutter {
     source = "../.."
 }
+apply plugin: 'com.google.gms.google-services'

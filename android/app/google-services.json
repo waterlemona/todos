@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "114144707560",
+    "project_id": "allcare-e00f7",
+    "storage_bucket": "allcare-e00f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:114144707560:android:e22f0dccb78a6dd40a1a5d",
+        "android_client_info": {
+          "package_name": "com.example.todo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDg6ylbLMkw5me7NM35iPKVEQ3PcZhtgdQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
