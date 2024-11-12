@@ -43,16 +43,36 @@ class _TodoPageState extends State<TodoPage> {
         itemCount: filteredTodoList.length,
         itemBuilder: (context, index) {
           final todo = filteredTodoList[index];
-          return ListTile(
-            title: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                todo.title,
-                style: TextStyle(decoration: todo.isDone ? TextDecoration.lineThrough : null),
-              ),
+          return Dismissible(
+            key: UniqueKey(),
+            direction: DismissDirection.endToStart,
+            onDismissed: (direction) {
+              setState(() {
+                _todoList.remove(todo);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${todo.title} 삭제됨')),
+              );
+            },
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              color: Colors.red,
+              child: Icon(Icons.delete, color: Colors.white),
             ),
-            trailing: _buildTrailingButtons(todo),
-            onTap: () => _showTodoDetails(context, todo),
+            child: ListTile(
+              title: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  todo.title,
+                  style: TextStyle(
+                    decoration: todo.isDone ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+              trailing: _buildTrailingButtons(todo),
+              onTap: () => _showTodoDetails(context, todo),
+            ),
           );
         },
       ),
