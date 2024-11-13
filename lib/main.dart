@@ -87,24 +87,24 @@ class _MyHomePageState extends State<MyHomePage> {
         defaultTextStyle: const TextStyle(color: Colors.black),
         todayDecoration: BoxDecoration(
           color: Colors.blue.withOpacity(0.3),
-          shape: BoxShape.Rectangle,
+          shape: BoxShape.Circle,
         ),
         selectedDecoration: const BoxDecoration(
           color: Colors.blue,
-          shape: BoxShape.Rectangle,
+          shape: BoxShape.Circle,
         ),
         defaultDecoration: BoxDecoration(
-          shape: BoxShape.Rectangle,
+          shape: BoxShape.Circle,
           color: Colors.grey.withOpacity(0.1),
         ),
         weekendDecoration: BoxDecoration(
-          shape: BoxShape.Rectangle,
+          shape: BoxShape.Circle,
           color: Colors.grey.withOpacity(0.1),
         ),
-        outsideDecoration: const BoxDecoration(shape: Retangle.circle),
+        outsideDecoration: const BoxDecoration(shape: BoxShape.Circle),
         markerDecoration: const BoxDecoration(
           color: Colors.blue,
-          shape: BoxShape.Rectangle,
+          shape: BoxShape.Circle,
         ),
       ),
       daysOfWeekStyle: const DaysOfWeekStyle(
