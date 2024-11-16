@@ -6,7 +6,7 @@ import 'nut.dart';
 import 'my.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-//import 'login.dart';
+import 'login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,10 +25,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'All Care',
       theme: ThemeData(
+        brightness: Brightness.light,
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        // 다크 모드의 다른 테마 설정
+      ),
+      themeMode: ThemeMode.system, // 시스템 설정에 따라 테마 변경
       home: const MyHomePage(),
+      // home: const LoginScreen(),
     );
   }
 }
@@ -42,12 +51,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
-  var _calendarFormat = CalendarFormat.month; // month, week 로 변경 가능케 var 사용
+  CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  List<Todo> _todoList = [];
 
-  // Todo, Nutrition 리스트 저장 변수
-  final List<Todo> _todoList = [];
+  // 추가: Todo와 Nutrition 리스트를 저장할 변수
+  final List<Todo> _ontodoList = [];
   final List<Nutrition> _nutritionList = [];
 
   late List<Widget> _widgetOptions;
@@ -61,6 +71,11 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedDate: _selectedDay!,
         onTodoAdded: _onTodoAdded,
         onTodoRemoved: _onTodoRemoved,
+        onTodoListChanged: (List<Todo> updatedList) {
+          setState(() {
+            _todoList = updatedList;
+          });
+        },
       ),
       NutPage(
         selectedDate: _selectedDay!,
@@ -103,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // MyPage update
+  // MyPage 업데이트
   void _updateMyPage() {
     _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
   }
@@ -112,6 +127,12 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  List<Todo> _getEventsForDay(DateTime day) {
+    return _todoList.where((todo) =>
+    isSameDay(todo.date, day) && !todo.isDone
+    ).toList();
   }
 
   Widget _buildCalendar() {
@@ -125,15 +146,36 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
+          // Todo 페이지의 선택된 날짜 업데이트
+          _widgetOptions[0] = TodoPage(
+            selectedDate: selectedDay,
+            onTodoAdded: _onTodoAdded,
+            onTodoRemoved: _onTodoRemoved,
+            onTodoListChanged: (List<Todo> updatedList) {
+              setState(() {
+                _todoList = updatedList;
+              });
+            },
+          );
+          // Nut 페이지의 선택된 날짜 업데이트
+          _widgetOptions[1] = NutPage(
+            selectedDate: selectedDay,
+            onNutritionAdded: _onNutritionAdded,
+            onNutritionRemoved: _onNutritionRemoved,);
         });
       },
       onFormatChanged: (format) {
-        setState(() {
-          _calendarFormat = format;
-        });
+        if (_calendarFormat != format) {
+          setState(() {
+            _calendarFormat = format;
+          });
+        }
       },
       onPageChanged: (focusedDay) {
         _focusedDay = focusedDay;
+      },
+      eventLoader: (day) {
+        return _getEventsForDay(day);
       },
       calendarStyle: CalendarStyle(
         defaultTextStyle: const TextStyle(color: Colors.black),
@@ -155,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         outsideDecoration: const BoxDecoration(shape: BoxShape.circle),
         markerDecoration: const BoxDecoration(
-          color: Colors.blue,
+          color: Colors.red,
           shape: BoxShape.circle,
         ),
       ),
@@ -165,6 +207,42 @@ class _MyHomePageState extends State<MyHomePage> {
       headerStyle: const HeaderStyle(
         formatButtonVisible: false,
         titleCentered: true,
+      ),
+      calendarBuilders: CalendarBuilders(
+        markerBuilder: (context, date, events) {
+          if (events.isNotEmpty) {
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return Positioned(
+                  right: constraints.maxWidth * 0.1, // 날짜 셀 너비의 10% 지점에 위치
+                  top: constraints.maxHeight * 0.1,  // 날짜 셀 높이의 10% 지점에 위치
+                  child: Container(
+                    width: constraints.maxWidth * 0.06,  // 날짜 셀 너비의 10%로 축소
+                    height: constraints.maxWidth * 0.1, // 정사각형 모양 유지
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFFFA500), // 주황색
+                    ),
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${events.length}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: constraints.maxWidth * 0.1, // 날짜 셀 너비의 6%로 축소
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+          return null;
+        },
       ),
     );
   }
@@ -185,17 +263,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            // 월간 형식과 주간 형식을 토글
-            _calendarFormat = _calendarFormat == CalendarFormat.month
-                ? CalendarFormat.week
-                : CalendarFormat.month;
-          });
-        },
-        child: const Icon(Icons.calendar_today),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
