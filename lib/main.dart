@@ -6,9 +6,7 @@ import 'nut.dart';
 import 'my.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:flutter/material.dart';
-import 'login.dart';
-
+//import 'login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +16,6 @@ void main() async {
 
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -31,8 +28,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home : const MyHomePage(),
-      // home: const LoginScreen(), 로그인 페이지로 시작하게 하는
+      home: const MyHomePage(),
     );
   }
 }
@@ -44,14 +40,13 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  var _calendarFormat = CalendarFormat.month; // month, week 로 변경 가능케 var 사용
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // 추가: Todo와 Nutrition 리스트를 저장할 변수
+  // Todo, Nutrition 리스트 저장 변수
   final List<Todo> _todoList = [];
   final List<Nutrition> _nutritionList = [];
 
@@ -75,7 +70,8 @@ class _MyHomePageState extends State<MyHomePage> {
       MyPage(todos: _todoList, nutritions: _nutritionList),
     ];
   }
-// Todo 추가 콜백
+
+  // Todo 추가 콜백
   void _onTodoAdded(Todo todo) {
     setState(() {
       _todoList.add(todo);
@@ -107,11 +103,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // MyPage 업데이트
+  // MyPage update
   void _updateMyPage() {
     _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
   }
-
 
   void _onItemTapped(int index) {
     setState(() {
@@ -130,18 +125,11 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
-          // Todo 페이지의 선택된 날짜 업데이트
-          _widgetOptions[0] = TodoPage(
-            selectedDate: selectedDay,
-            onTodoAdded: _onTodoAdded,
-            onTodoRemoved: _onTodoRemoved,
-          );
-          // Nut 페이지의 선택된 날짜 업데이트
-          _widgetOptions[1] = NutPage(
-            selectedDate: selectedDay,
-            onNutritionAdded: _onNutritionAdded,
-            onNutritionRemoved: _onNutritionRemoved,
-          );
+        });
+      },
+      onFormatChanged: (format) {
+        setState(() {
+          _calendarFormat = format;
         });
       },
       onPageChanged: (focusedDay) {
@@ -197,6 +185,17 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            // 월간 형식과 주간 형식을 토글
+            _calendarFormat = _calendarFormat == CalendarFormat.month
+                ? CalendarFormat.week
+                : CalendarFormat.month;
+          });
+        },
+        child: const Icon(Icons.calendar_today),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
