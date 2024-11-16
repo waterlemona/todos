@@ -108,44 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-  // Todo 추가 콜백
-  void _onTodoAdded(Todo todo) {
-    setState(() {
-      _todoList.add(todo);
-      _updateMyPage();
-    });
-  }
-
-  // Todo 제거 콜백
-  void _onTodoRemoved(Todo todo) {
-    setState(() {
-      _todoList.remove(todo);
-      _updateMyPage();
-    });
-  }
-
-  // Nutrition 추가 콜백
-  void _onNutritionAdded(Nutrition nutrition) {
-    setState(() {
-      _nutritionList.add(nutrition);
-      _updateMyPage();
-    });
-  }
-
-  // Nutrition 제거 콜백
-  void _onNutritionRemoved(Nutrition nutrition) {
-    setState(() {
-      _nutritionList.remove(nutrition);
-      _updateMyPage();
-    });
-  }
-
-  // MyPage 업데이트
-  void _updateMyPage() {
-    _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
-  }
-
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
