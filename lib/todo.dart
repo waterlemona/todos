@@ -18,24 +18,18 @@ class Todo {
   });
 }
 
-//원본
-//class TodoPage extends StatefulWidget {
-//final DateTime selectedDate;
-
-//TodoPage({required this.selectedDate});
-
-//콜백을 받아들이도록 수정
+//TodoPage 수정: 콜백 함수 추가
 class TodoPage extends StatefulWidget {
   final DateTime selectedDate;
   final Function(Todo) onTodoAdded;
   final Function(Todo) onTodoRemoved;
-  final Function(List<Todo>) onTodoListChanged; // 추가
+  final Function(List<Todo>) onTodoListChanged; // 할 일 목록 변경 콜백
 
   TodoPage({
     required this.selectedDate,
     required this.onTodoAdded,
     required this.onTodoRemoved,
-    required this.onTodoListChanged, // 추가
+    required this.onTodoListChanged,
   });
 
   @override
@@ -43,11 +37,12 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  // 초기 할 일 리스트
+  //초기 할 일 리스트
   final List<Todo> _todoList = [];
 
+  //할 일 목록 업데이트
   void _updateTodoList() {
-    widget.onTodoListChanged?.call(_todoList); // 수정된 부분: null 체크 후 호출
+    widget.onTodoListChanged(_todoList); // 콜백 함수 호출
   }
 
   @override
@@ -69,7 +64,8 @@ class _TodoPageState extends State<TodoPage> {
               setState(() {
                 _todoList.remove(todo);
               });
-              _updateTodoList(); // 추가
+              widget.onTodoRemoved(todo); // 할 일 삭제 콜백 호출
+              _updateTodoList();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${todo.title} 삭제됨')),
               );
@@ -103,6 +99,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  //할 일 항목의 우측 버튼 구성
   Widget _buildTrailingButtons(Todo todo) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -117,13 +114,14 @@ class _TodoPageState extends State<TodoPage> {
             setState(() {
               todo.isDone = value ?? false;
             });
-            _updateTodoList(); // 추가
+            _updateTodoList();
           },
         ),
       ],
     );
   }
 
+  //제목 수정 다이얼로그
   void _showEditTitleDialog(BuildContext context, Todo todo) {
     TextEditingController _controller = TextEditingController(text: todo.title);
     showDialog(
@@ -146,7 +144,7 @@ class _TodoPageState extends State<TodoPage> {
                 setState(() {
                   todo.title = _controller.text;
                 });
-                _updateTodoList(); // 추가
+                _updateTodoList();
                 Navigator.of(context).pop();
               },
             ),
@@ -156,6 +154,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  //할 일 상세 보기
   void _showTodoDetails(BuildContext context, Todo todo) {
     showModalBottomSheet(
       context: context,
@@ -184,12 +183,13 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  //메모 입력 필드
   Widget _buildMemoField(Todo todo) {
     return TextFormField(
       initialValue: todo.memo,
       onChanged: (value) => setState(() {
         todo.memo = value.trim().isEmpty ? null : value;
-        _updateTodoList(); // 추가
+        _updateTodoList();
       }),
       decoration: InputDecoration(
         hintText: todo.memo?.isEmpty ?? true ? '메모' : '',
@@ -201,6 +201,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  //알림 및 반복 설정 버튼
   Widget _buildAlarmAndRepeatRow(Todo todo) {
     return Row(
       children: [
@@ -210,7 +211,7 @@ class _TodoPageState extends State<TodoPage> {
       ],
     );
   }
-
+  //알림 옵션 생성 함수
   Widget _buildAlarmOption(Todo todo) {
     return Expanded(
       child: GestureDetector(
@@ -222,7 +223,7 @@ class _TodoPageState extends State<TodoPage> {
       ),
     );
   }
-
+  //반복 설정 옵션 생성
   Widget _buildRepeatOption(Todo todo) {
     return Expanded(
       child: GestureDetector(
@@ -235,6 +236,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  //옵션 박스 UI 구성
   Widget _buildOptionBox({required IconData icon, required String text}) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -253,13 +255,14 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  // 완료 버튼
   Widget _buildCompletionButton(Todo todo) {
     return ElevatedButton.icon(
       onPressed: () {
         setState(() {
           todo.isDone = !todo.isDone;
         });
-        _updateTodoList(); // 추가
+        _updateTodoList();
         Navigator.pop(context);
       },
       icon: Icon(todo.isDone ? Icons.check_circle : Icons.circle_outlined),
@@ -267,13 +270,15 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  // 삭제 버튼
   Widget _buildDeleteButton(Todo todo) {
     return ElevatedButton.icon(
       onPressed: () {
         setState(() {
           _todoList.remove(todo);
         });
-        _updateTodoList(); // 추가
+        widget.onTodoRemoved(todo);
+        _updateTodoList();
         Navigator.pop(context);
       },
       icon: Icon(Icons.delete, color: Colors.red),
@@ -284,6 +289,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  // 알림 시간 선택
   void _selectAlarmTime(BuildContext context, Todo todo) async {
     TimeOfDay? selectedTime = await showTimePicker(
       context: context,
@@ -293,10 +299,11 @@ class _TodoPageState extends State<TodoPage> {
       setState(() {
         todo.alarmTime = selectedTime;
       });
-      _updateTodoList(); // 추가
+      _updateTodoList();
     }
   }
 
+  // 반복 옵션 선택
   void _selectRepeatOption(BuildContext context, Todo todo) async {
     String? selectedRepeat = await showDialog<String>(
       context: context,
@@ -317,10 +324,10 @@ class _TodoPageState extends State<TodoPage> {
       setState(() {
         todo.repeat = selectedRepeat;
       });
-      _updateTodoList(); // 추가
+      _updateTodoList();
     }
   }
-
+// 반복 설정 옵션 반영
   SimpleDialogOption _buildRepeatOptionDialog(String option) {
     return SimpleDialogOption(
       onPressed: () {
@@ -330,6 +337,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  // 새로운 할 일 추가
   void _addNewTodoDialog() {
     TextEditingController _controller = TextEditingController();
 
@@ -350,18 +358,19 @@ class _TodoPageState extends State<TodoPage> {
             TextButton(
               child: Text('추가'),
               onPressed: () {
-                String title = _controller.text.trim(); // 입력된 제목을 가져옵니다.
+                String title = _controller.text.trim();
 
-                if (title.isNotEmpty) { // 비어 있지 않으면
+                if (title.isNotEmpty) {
                   setState(() {
-                    _todoList.add(Todo(
+                    Todo newTodo = Todo(
                       title: title,
                       date: widget.selectedDate,
-                    ));
+                    );
+                    _todoList.add(newTodo);
+                    widget.onTodoAdded(newTodo); // 추가된 할 일 콜백 호출
                   });
-                  Navigator.of(context).pop(); // 다이얼로그 닫기
+                  Navigator.of(context).pop();
                 } else {
-                  // 텍스트가 비어 있으면 추가하지 않음
                   ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('할 일 제목을 입력해주세요!'))
                   );
@@ -375,6 +384,7 @@ class _TodoPageState extends State<TodoPage> {
   }
 }
 
+// 두 날짜가 같은 날인지 확인하는 함수
 bool isSameDay(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
 }
