@@ -87,7 +87,14 @@ class _TodoPageState extends State<TodoPage> {
   void _updateTodoList() {
     widget.onTodoListChanged(_todoList); // 콜백 함수 호출
   }
-
+  Future<void> _updateTodoInFirestore(Todo todo) async {
+    final todoCollection = FirebaseFirestore.instance.collection('todos');
+    try {
+      await todoCollection.doc(todo.id).update(todo.toMap());
+    } catch (e) {
+      print("Error updating todo: $e");
+    }
+  }
   // Firestore에서 할 일 목록 읽기
   Future<void> _loadTodos() async {
     final todoCollection = FirebaseFirestore.instance.collection('todos');
@@ -97,6 +104,7 @@ class _TodoPageState extends State<TodoPage> {
       _todoList = snapshot.docs
           .map((doc) => Todo.fromFirestore(doc))  // Firestore에서 Todo 객체로 변환
           .toList();
+      _updateTodoList();
     });
     widget.onTodoListChanged(_todoList); // 상위 위젯에 변경 알림
   }
@@ -190,10 +198,11 @@ class _TodoPageState extends State<TodoPage> {
         ),
         Checkbox(
           value: todo.isDone,
-          onChanged: (bool? value) {
+          onChanged: (bool? value) async {
             setState(() {
               todo.isDone = value ?? false;
             });
+            await _updateTodoInFirestore(todo);
             _updateTodoList();
           },
         ),
@@ -377,10 +386,11 @@ class _TodoPageState extends State<TodoPage> {
   // 완료 버튼
   Widget _buildCompletionButton(Todo todo) {
     return ElevatedButton(
-      onPressed: () {
+      onPressed: () async {
         setState(() {
           todo.isDone = !todo.isDone;
         });
+        await _updateTodoInFirestore(todo);
         _updateTodoList();
       },
       child: Text(todo.isDone ? '완료 취소' : '완료하기'),
