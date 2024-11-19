@@ -98,6 +98,7 @@ class _TodoPageState extends State<TodoPage> {
           .map((doc) => Todo.fromFirestore(doc))  // Firestore에서 Todo 객체로 변환
           .toList();
     });
+    widget.onTodoListChanged(_todoList); // 상위 위젯에 변경 알림
   }
 
   // Firestore에 할 일 추가
