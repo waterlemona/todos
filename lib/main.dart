@@ -71,11 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedDate: _selectedDay!,
         onTodoAdded: _onTodoAdded,
         onTodoRemoved: _onTodoRemoved,
-        onTodoListChanged: (List<Todo> updatedList) {
-          setState(() {
-            _todoList = updatedList;
-          });
-        },
+          onTodoListChanged: _updateTodoList
       ),
       NutPage(
         selectedDate: _selectedDay!,
@@ -84,6 +80,18 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       MyPage(todos: _todoList, nutritions: _nutritionList),
     ];
+  }
+  void _updateTodoList(List<Todo> updatedList) {
+    setState(() {
+      _todoList = updatedList;
+      // 캘린더 위젯 업데이트
+      _widgetOptions[0] = TodoPage(
+        selectedDate: _selectedDay!,
+        onTodoAdded: _onTodoAdded,
+        onTodoRemoved: _onTodoRemoved,
+        onTodoListChanged: _updateTodoList,
+      );
+    });
   }
 
   // Todo 추가 콜백
