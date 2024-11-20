@@ -309,6 +309,7 @@ class _TodoPageState extends State<TodoPage> {
         child: _buildOptionBox(
           icon: Icons.alarm,
           text: todo.alarmTime != null ? '${todo.alarmTime!.hour}:${todo.alarmTime!.minute}' : '알림 시간',
+
         ),
       ),
     );
@@ -323,6 +324,7 @@ class _TodoPageState extends State<TodoPage> {
           icon: Icons.repeat,
           text: todo.repeat ?? '반복 설정',
         ),
+
       ),
     );
   }
@@ -370,7 +372,7 @@ class _TodoPageState extends State<TodoPage> {
     return Container(
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -453,7 +455,6 @@ class _TodoPageState extends State<TodoPage> {
                     setState(() {
                       _todoList.add(newTodo); // 할 일 목록에 추가
                     });
-                    widget.onTodoAdded(newTodo); // 새 할 일 추가 콜백 호출
                     Navigator.of(context).pop();
                   } catch (e) {
                     // 오류 처리

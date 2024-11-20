@@ -128,7 +128,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // MyPage 업데이트
   void _updateMyPage() {
-    _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
+    setState(() {
+      _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
+    });
   }
 
   void _onItemTapped(int index) {
@@ -225,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   right: constraints.maxWidth * 0.1, // 날짜 셀 너비의 10% 지점에 위치
                   top: constraints.maxHeight * 0.1,  // 날짜 셀 높이의 10% 지점에 위치
                   child: Container(
-                    width: constraints.maxWidth * 0.06,  // 날짜 셀 너비의 10%로 축소
+                    width: constraints.maxWidth * 0.05,  // 날짜 셀 너비의 10%로 축소
                     height: constraints.maxWidth * 0.1, // 정사각형 모양 유지
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
