@@ -80,7 +80,11 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedDate: _selectedDay!,
         onTodoAdded: _onTodoAdded,
         onTodoRemoved: _onTodoRemoved,
-          onTodoListChanged: _updateTodoList
+        onTodoListChanged: (List<Todo> updatedList) {
+          setState(() {
+            _todoList = updatedList;
+          });
+        },
       ),
       NutPage(
         selectedDate: _selectedDay!,
@@ -90,19 +94,10 @@ class _MyHomePageState extends State<MyHomePage> {
       MyPage(todos: _todoList, nutritions: _nutritionList),
     ];
   }
-  void _updateTodoList(List<Todo> updatedList) {
-    setState(() {
-      _todoList = updatedList;
-      // 캘린더 위젯 업데이트
-      _widgetOptions[0] = TodoPage(
-        selectedDate: _selectedDay!,
-        onTodoAdded: _onTodoAdded,
-        onTodoRemoved: _onTodoRemoved,
-        onTodoListChanged: _updateTodoList,
-      );
-    });
+  bool _isAllTodosCompletedForDay(DateTime day) {
+    var todosForDay = _todoList.where((todo) => isSameDay(todo.date, day)).toList();
+    return todosForDay.isNotEmpty && todosForDay.every((todo) => todo.isDone);
   }
-
   // Todo 추가 콜백
   void _onTodoAdded(Todo todo) {
     setState(() {
@@ -137,9 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // MyPage 업데이트
   void _updateMyPage() {
-    setState(() {
-      _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
-    });
+    _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
   }
 
   void _onItemTapped(int index) {
@@ -228,19 +221,36 @@ class _MyHomePageState extends State<MyHomePage> {
         titleCentered: true,
       ),
       calendarBuilders: CalendarBuilders(
+        defaultBuilder: (context, day, focusedDay) {
+          if (_isAllTodosCompletedForDay(day)) {
+            return Container(
+              margin: const EdgeInsets.all(4.0),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${day.day}',
+                style: TextStyle(color: Colors.black),
+              ),
+            );
+          }
+          return null;
+        },
         markerBuilder: (context, date, events) {
           if (events.isNotEmpty) {
             return LayoutBuilder(
               builder: (context, constraints) {
                 return Positioned(
-                  right: constraints.maxWidth * 0.1, // 날짜 셀 너비의 10% 지점에 위치
-                  top: constraints.maxHeight * 0.1,  // 날짜 셀 높이의 10% 지점에 위치
+                  right: constraints.maxWidth * 0.1,
+                  top: constraints.maxHeight * 0.1,
                   child: Container(
-                    width: constraints.maxWidth * 0.05,  // 날짜 셀 너비의 10%로 축소
-                    height: constraints.maxWidth * 0.1, // 정사각형 모양 유지
+                    width: constraints.maxWidth * 0.05,
+                    height: constraints.maxWidth * 0.1,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFFFA500), // 주황색
+                      color: Color(0xFFFFA500),
                     ),
                     child: Center(
                       child: FittedBox(
@@ -249,7 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           '${events.length}',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: constraints.maxWidth * 0.1, // 날짜 셀 너비의 6%로 축소
+                            fontSize: constraints.maxWidth * 0.1,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
