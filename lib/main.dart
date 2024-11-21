@@ -22,6 +22,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color invertColor(Color color) {
+      return Color.fromARGB(
+        color.alpha,
+        255 - color.red,
+        255 - color.green,
+        255 - color.blue,
+      );
+    }
     return MaterialApp(
       title: 'All Care',
       theme: ThemeData(
@@ -37,7 +45,8 @@ class MyApp extends StatelessWidget {
       ),
       themeMode: ThemeMode.system, // 시스템 설정에 따라 테마 변경
       home: const MyHomePage(),
-      // home: const LoginScreen(),
+      // home: const LoginScreen()
+
     );
   }
 }

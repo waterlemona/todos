@@ -1,214 +1,214 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+  import 'package:flutter/material.dart';
+  import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Todo 모델 클래스
-class Todo {
-  String id;
-  String title;
-  final DateTime date;
-  String? memo;
-  TimeOfDay? alarmTime;
-  String? repeat;
-  bool isDone;
+  // Todo 모델 클래스
+  class Todo {
+    String id;
+    String title;
+    final DateTime date;
+    String? memo;
+    TimeOfDay? alarmTime;
+    String? repeat;
+    bool isDone;
 
-  Todo({
-    this.id = '',
-    required this.title,
-    required this.date,
-    this.memo,
-    this.alarmTime,
-    this.repeat,
-    this.isDone = false,
-  });
-
-  // Firestore에서 가져온 데이터를 Map으로 변환
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'date': Timestamp.fromDate(date),  // DateTime을 Timestamp로 변환
-      'memo': memo,
-      'alarmTime': alarmTime != null
-          ? {'hour': alarmTime!.hour, 'minute': alarmTime!.minute}
-          : null,
-      'repeat': repeat,
-      'isDone': isDone,
-    };
-  }
-
-
-  // Firestore의 데이터를 Todo 객체로 변환
-  static Todo fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Todo(
-      id: doc.id,
-      title: data['title'],
-      date: (data['date'] as Timestamp).toDate(),
-      memo: data['memo'],
-      alarmTime: data['alarmTime'] != null
-          ? TimeOfDay(
-        hour: data['alarmTime']['hour'],
-        minute: data['alarmTime']['minute'],
-      )
-          : null,
-      repeat: data['repeat'],
-      isDone: data['isDone'],
-    );
-  }
-}
-
-// TodoPage 수정: 콜백 함수 추가
-class TodoPage extends StatefulWidget {
-  final DateTime selectedDate;
-  final Function(Todo) onTodoAdded;
-  final Function(Todo) onTodoRemoved;
-  final Function(List<Todo>) onTodoListChanged; // 할 일 목록 변경 콜백
-
-  TodoPage({
-    required this.selectedDate,
-    required this.onTodoAdded,
-    required this.onTodoRemoved,
-    required this.onTodoListChanged,
-  });
-
-  @override
-  _TodoPageState createState() => _TodoPageState();
-}
-
-class _TodoPageState extends State<TodoPage> {
-  // 할 일 목록 (Firestore에서 가져온 데이터 저장)
-  List<Todo> _todoList = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTodos(); // 앱 시작 시 Firestore에서 데이터 불러오기
-  }
-
-  void _updateTodoList() {
-    widget.onTodoListChanged(_todoList); // 콜백 함수 호출
-  }
-  Future<void> _updateTodoInFirestore(Todo todo) async {
-    final todoCollection = FirebaseFirestore.instance.collection('todos');
-    try {
-      await todoCollection.doc(todo.id).update(todo.toMap());
-    } catch (e) {
-      print("Error updating todo: $e");
-    }
-  }
-  // Firestore에서 할 일 목록 읽기
-  Future<void> _loadTodos() async {
-    final todoCollection = FirebaseFirestore.instance.collection('todos');
-    QuerySnapshot snapshot = await todoCollection.get();
-
-    setState(() {
-      _todoList = snapshot.docs
-          .map((doc) => Todo.fromFirestore(doc))  // Firestore에서 Todo 객체로 변환
-          .toList();
-      _updateTodoList();
+    Todo({
+      this.id = '',
+      required this.title,
+      required this.date,
+      this.memo,
+      this.alarmTime,
+      this.repeat,
+      this.isDone = false,
     });
-    widget.onTodoListChanged(_todoList); // 상위 위젯에 변경 알림
+
+    // Firestore에서 가져온 데이터를 Map으로 변환
+    Map<String, dynamic> toMap() {
+      return {
+        'title': title,
+        'date': Timestamp.fromDate(date),  // DateTime을 Timestamp로 변환
+        'memo': memo,
+        'alarmTime': alarmTime != null
+            ? {'hour': alarmTime!.hour, 'minute': alarmTime!.minute}
+            : null,
+        'repeat': repeat,
+        'isDone': isDone,
+      };
+    }
+
+
+    // Firestore의 데이터를 Todo 객체로 변환
+    static Todo fromFirestore(DocumentSnapshot doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return Todo(
+        id: doc.id,
+        title: data['title'],
+        date: (data['date'] as Timestamp).toDate(),
+        memo: data['memo'],
+        alarmTime: data['alarmTime'] != null
+            ? TimeOfDay(
+          hour: data['alarmTime']['hour'],
+          minute: data['alarmTime']['minute'],
+        )
+            : null,
+        repeat: data['repeat'],
+        isDone: data['isDone'],
+      );
+    }
   }
 
-  // Firestore에 할 일 추가
-  Future<void> _addTodoToFirestore(Todo todo) async {
-    final todoCollection = FirebaseFirestore.instance.collection('todos');
-    try {
-      DocumentReference docRef = await todoCollection.add(todo.toMap());
+  // TodoPage 수정: 콜백 함수 추가
+  class TodoPage extends StatefulWidget {
+    final DateTime selectedDate;
+    final Function(Todo) onTodoAdded;
+    final Function(Todo) onTodoRemoved;
+    final Function(List<Todo>) onTodoListChanged; // 할 일 목록 변경 콜백
+
+    TodoPage({
+      required this.selectedDate,
+      required this.onTodoAdded,
+      required this.onTodoRemoved,
+      required this.onTodoListChanged,
+    });
+
+    @override
+    _TodoPageState createState() => _TodoPageState();
+  }
+
+  class _TodoPageState extends State<TodoPage> {
+    // 할 일 목록 (Firestore에서 가져온 데이터 저장)
+    List<Todo> _todoList = [];
+
+    @override
+    void initState() {
+      super.initState();
+      _loadTodos(); // 앱 시작 시 Firestore에서 데이터 불러오기
+    }
+
+    void _updateTodoList() {
+      widget.onTodoListChanged(_todoList); // 콜백 함수 호출
+    }
+    Future<void> _updateTodoInFirestore(Todo todo) async {
+      final todoCollection = FirebaseFirestore.instance.collection('todos');
+      try {
+        await todoCollection.doc(todo.id).update(todo.toMap());
+      } catch (e) {
+        print("Error updating todo: $e");
+      }
+    }
+    // Firestore에서 할 일 목록 읽기
+    Future<void> _loadTodos() async {
+      final todoCollection = FirebaseFirestore.instance.collection('todos');
+      QuerySnapshot snapshot = await todoCollection.get();
+
       setState(() {
-        todo.id = docRef.id;  // Firestore에서 생성된 ID를 Todo에 저장
+        _todoList = snapshot.docs
+            .map((doc) => Todo.fromFirestore(doc))  // Firestore에서 Todo 객체로 변환
+            .toList();
+        _updateTodoList();
       });
-    } catch (e) {
-      print("Error adding todo: $e");
+      widget.onTodoListChanged(_todoList); // 상위 위젯에 변경 알림
     }
-  }
 
-  // Firestore에서 할 일 삭제
-  Future<void> _deleteTodoFromFirestore(String todoId) async {
-    final todoCollection = FirebaseFirestore.instance.collection('todos');
-    try {
-      await todoCollection.doc(todoId).delete();
-    } catch (e) {
-      print("Error deleting todo: $e");
+    // Firestore에 할 일 추가
+    Future<void> _addTodoToFirestore(Todo todo) async {
+      final todoCollection = FirebaseFirestore.instance.collection('todos');
+      try {
+        DocumentReference docRef = await todoCollection.add(todo.toMap());
+        setState(() {
+          todo.id = docRef.id;  // Firestore에서 생성된 ID를 Todo에 저장
+        });
+      } catch (e) {
+        print("Error adding todo: $e");
+      }
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final filteredTodoList = _todoList.where((todo) => isSameDay(todo.date, widget.selectedDate)).toList();
+    // Firestore에서 할 일 삭제
+    Future<void> _deleteTodoFromFirestore(String todoId) async {
+      final todoCollection = FirebaseFirestore.instance.collection('todos');
+      try {
+        await todoCollection.doc(todoId).delete();
+      } catch (e) {
+        print("Error deleting todo: $e");
+      }
+    }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Todo'),
-      ),
-      body: ListView.builder(
-        itemCount: filteredTodoList.length,
-        itemBuilder: (context, index) {
-          final todo = filteredTodoList[index];
-          return Dismissible(
-            key: Key(todo.id),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) {
-              setState(() {
-                _todoList.remove(todo);
-              });
-              widget.onTodoRemoved(todo); // 할 일 삭제 콜백 호출
-              _deleteTodoFromFirestore(todo.id); // Firestore에서 할 일 삭제
-              _updateTodoList();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${todo.title} 삭제됨')),
-              );
-            },
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              color: Colors.red,
-              child: Icon(Icons.delete, color: Colors.white),
-            ),
-            child: ListTile(
-              title: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  todo.title,
-                  style: TextStyle(
-                    decoration: todo.isDone ? TextDecoration.lineThrough : null,
+    @override
+    Widget build(BuildContext context) {
+      final filteredTodoList = _todoList.where((todo) => isSameDay(todo.date, widget.selectedDate)).toList();
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Todo'),
+        ),
+        body: ListView.builder(
+          itemCount: filteredTodoList.length,
+          itemBuilder: (context, index) {
+            final todo = filteredTodoList[index];
+            return Dismissible(
+              key: Key(todo.id),
+              direction: DismissDirection.endToStart,
+              onDismissed: (direction) {
+                setState(() {
+                  _todoList.remove(todo);
+                });
+                widget.onTodoRemoved(todo); // 할 일 삭제 콜백 호출
+                _deleteTodoFromFirestore(todo.id); // Firestore에서 할 일 삭제
+                _updateTodoList();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${todo.title} 삭제됨')),
+                );
+              },
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                color: Colors.red,
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              child: ListTile(
+                title: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    todo.title,
+                    style: TextStyle(
+                      decoration: todo.isDone ? TextDecoration.lineThrough : null,
+                    ),
                   ),
                 ),
+                trailing: _buildTrailingButtons(todo),
+                onTap: () => _showTodoDetails(context, todo),
               ),
-              trailing: _buildTrailingButtons(todo),
-              onTap: () => _showTodoDetails(context, todo),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addNewTodoDialog(),
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-
-  // 할 일 항목의 우측 버튼 구성
-  Widget _buildTrailingButtons(Todo todo) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(Icons.edit, color: Colors.blue),
-          onPressed: () => _showEditTitleDialog(context, todo),
-        ),
-        Checkbox(
-          value: todo.isDone,
-          onChanged: (bool? value) async {
-            setState(() {
-              todo.isDone = value ?? false;
-            });
-            await _updateTodoInFirestore(todo);
-            _updateTodoList();
+            );
           },
         ),
-      ],
-    );
-  }
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _addNewTodoDialog(),
+          child: Icon(Icons.add),
+        ),
+      );
+    }
+
+    // 할 일 항목의 우측 버튼 구성
+    Widget _buildTrailingButtons(Todo todo) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.blue),
+            onPressed: () => _showEditTitleDialog(context, todo),
+          ),
+          Checkbox(
+            value: todo.isDone,
+            onChanged: (bool? value) async {
+              setState(() {
+                todo.isDone = value ?? false;
+              });
+              await _updateTodoInFirestore(todo);
+              _updateTodoList();
+            },
+          ),
+        ],
+      );
+    }
 
   // 제목 수정 다이얼로그
   void _showEditTitleDialog(BuildContext context, Todo todo) {
