@@ -1,10 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 import 'signup.dart';
 
-
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _signIn() async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      // 로그인 성공
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MyHomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      // 로그인 실패
+      String errorMessage;
+      if (e.code == 'user-not-found') {
+        errorMessage = '해당 이메일로 등록된 사용자를 찾을 수 없습니다.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = '잘못된 비밀번호입니다.';
+      } else {
+        errorMessage = '오류가 발생했습니다. 다시 시도해주세요.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +61,7 @@ class LoginScreen extends StatelessWidget {
             child: const Padding(
               padding: EdgeInsets.only(top: 60.0, left: 22),
               child: Text(
-                'Life Style',
+                'ALL Care',
                 style: TextStyle(
                   fontSize: 30,
                   color: Colors.white,
@@ -51,34 +87,32 @@ class LoginScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.check,
                           color: Colors.grey,
                         ),
-                        label: Text(
-                          'Gmail',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffB81736),
-                          ),
+                        labelText: '이메일',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
                         ),
                       ),
                     ),
-                    const TextField(
-                      obscureText: true, // 비밀번호 텍스트 가리기
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.visibility_off,
                           color: Colors.grey,
                         ),
-                        label: Text(
-                          'Password',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffB81736),
-                          ),
+                        labelText: '비밀번호',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
                         ),
                       ),
                     ),
@@ -86,7 +120,7 @@ class LoginScreen extends StatelessWidget {
                     const Align(
                       alignment: Alignment.centerRight,
                       child: Text(
-                        'Forgot Password?',
+                        '비밀번호를 잊으셨나요?',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 17,
@@ -96,15 +130,7 @@ class LoginScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 70),
                     GestureDetector(
-                      onTap: () {
-                        // 로그인 성공 시 캘린더 페이지로 전환
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyHomePage(),
-                          ),
-                        );
-                      },
+                      onTap: _signIn,
                       child: Container(
                         height: 55,
                         width: 300,
@@ -119,7 +145,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                         child: const Center(
                           child: Text(
-                            'SIGN IN',
+                            '로그인',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 20,
@@ -137,7 +163,7 @@ class LoginScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           const Text(
-                            "Don't have an account?",
+                            "계정이 없으신가요?",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -145,7 +171,6 @@ class LoginScreen extends StatelessWidget {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // SignUpScreen으로 이동
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -153,8 +178,8 @@ class LoginScreen extends StatelessWidget {
                                 ),
                               );
                             },
-                            child: Text(
-                              "Sign up",
+                            child: const Text(
+                              "회원가입",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 17,
@@ -173,5 +198,12 @@ class LoginScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

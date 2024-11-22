@@ -1,8 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SignUpScreen extends StatelessWidget {
-  // const 제거
+class SignUpScreen extends StatefulWidget {
   SignUpScreen({Key? key}) : super(key: key);
+
+  @override
+  _SignUpScreenState createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _signUp() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('비밀번호가 일치하지 않습니다.')),
+      );
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // 사용자 이름 업데이트
+      await userCredential.user?.updateDisplayName(_usernameController.text);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('회원가입이 완료되었습니다.')),
+      );
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'weak-password') {
+        errorMessage = '제공된 비밀번호가 너무 취약합니다.';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = '해당 이메일로 이미 계정이 존재합니다.';
+      } else {
+        errorMessage = '오류가 발생했습니다. 다시 시도해주세요.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('오류가 발생했습니다. 다시 시도해주세요.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +74,7 @@ class SignUpScreen extends StatelessWidget {
             child: const Padding(
               padding: EdgeInsets.only(top: 60.0, left: 22),
               child: Text(
-                'Sign Up',
+                '회원가입',
                 style: TextStyle(
                   fontSize: 30,
                   color: Colors.white,
@@ -49,74 +100,67 @@ class SignUpScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.email,
                           color: Colors.grey,
                         ),
-                        label: Text(
-                          'Gmail',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffB81736),
-                          ),
+                        labelText: '이메일',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
                         ),
                       ),
                     ),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.person,
                           color: Colors.grey,
                         ),
-                        label: Text(
-                          'Username',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffB81736),
-                          ),
+                        labelText: '사용자 이름',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
                         ),
                       ),
                     ),
-                    const TextField(
+                    TextField(
+                      controller: _passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.visibility_off,
                           color: Colors.grey,
                         ),
-                        label: Text(
-                          'Password',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffB81736),
-                          ),
+                        labelText: '비밀번호',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
                         ),
                       ),
                     ),
-                    const TextField(
+                    TextField(
+                      controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.visibility_off,
                           color: Colors.grey,
                         ),
-                        label: Text(
-                          'Confirm Password',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffB81736),
-                          ),
+                        labelText: '비밀번호 확인',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
                         ),
                       ),
                     ),
                     const SizedBox(height: 70),
                     GestureDetector(
-                      onTap: () {
-                        // 회원가입 완료 후, 로그인 화면으로 이동
-                        Navigator.pop(context);
-                      },
+                      onTap: _signUp,
                       child: Container(
                         height: 55,
                         width: 300,
@@ -131,7 +175,7 @@ class SignUpScreen extends StatelessWidget {
                         ),
                         child: const Center(
                           child: Text(
-                            'SIGN UP',
+                            '회원가입',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 20,
@@ -144,13 +188,12 @@ class SignUpScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     GestureDetector(
                       onTap: () {
-                        // 로그인 화면으로 이동
                         Navigator.pop(context);
                       },
                       child: const Align(
                         alignment: Alignment.center,
                         child: Text(
-                          'Already have an account? Sign In',
+                          '이미 계정이 있으신가요? 로그인',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xff281537),
@@ -166,5 +209,14 @@ class SignUpScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }
