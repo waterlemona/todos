@@ -4,40 +4,188 @@ import 'package:collection/collection.dart';
 import 'dart:math' as math;
 import 'todo.dart';
 import 'nut.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:excel/excel.dart';
 
-class MyPage extends StatelessWidget {
+class MyPage extends StatefulWidget {
   final List<Todo> todos;
   final List<Nutrition> nutritions;
 
   MyPage({required this.todos, required this.nutritions});
 
   @override
+  _MyPageState createState() => _MyPageState();
+}
+
+class _MyPageState extends State<MyPage> {
+  int _selectedIndex = 0;
+  String _searchQuery = '';
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('My Page')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('통계', style: Theme.of(context).textTheme.headlineSmall),
-              SizedBox(height: 20),
-              _buildTodoCompletionChart(),
-              SizedBox(height: 20),
-              _buildNutritionIntakeChart(),
-              SizedBox(height: 20),
-              _buildCorrelationAnalysis(),
-              SizedBox(height: 20),
-              _buildRecommendations(),
-            ],
+      body: Column(
+        children: [
+          _buildTabBar(),
+          Expanded(
+            child: _buildSelectedView(),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildTodoCompletionChart() {
+  Widget _buildTabBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildTabButton('나의 기록', 0),
+        _buildTabButton('통계', 1),
+        _buildTabButton('피드백', 2),
+      ],
+    );
+  }
+
+  Widget _buildTabButton(String title, int index) {
+    return ElevatedButton(
+      child: Text(title),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _selectedIndex == index ? Colors.blue : Colors.grey,
+        foregroundColor: Colors.white,
+      ),
+      onPressed: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+    );
+  }
+
+  Widget _buildSelectedView() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildMyRecordsView();
+      case 1:
+        return _buildStatisticsView();
+      case 2:
+        return _buildFeedbackView();
+      default:
+        return Container();
+    }
+  }
+
+  Widget _buildMyRecordsView() {
+    List<Todo> filteredTodos = widget.todos.where((todo) =>
+        todo.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: '할 일 검색',
+              suffixIcon: Icon(Icons.search),
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: filteredTodos.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(filteredTodos[index].title),
+                subtitle: Text(filteredTodos[index].date.toString()),
+                trailing: Icon(
+                  filteredTodos[index].isDone ? Icons.check_box : Icons.check_box_outline_blank,
+                ),
+              );
+            },
+          ),
+        ),
+        ElevatedButton(
+          child: Text('엑셀로 다운로드'),
+          onPressed: _exportToExcel,
+        ),
+      ],
+    );
+  }
+
+  void _exportToExcel() {
+    var excel = Excel.createExcel();
+    Sheet sheetObject = excel['Sheet1'];
+
+    // 헤더 추가
+    sheetObject.cell(CellIndex.indexByString("A1")).value = TextCellValue("제목");
+    sheetObject.cell(CellIndex.indexByString("B1")).value = TextCellValue("날짜");
+    sheetObject.cell(CellIndex.indexByString("C1")).value = TextCellValue("완료 여부");
+
+    for (int i = 0; i < widget.todos.length; i++) {
+      sheetObject.cell(CellIndex.indexByString("A${i + 2}")).value = TextCellValue(widget.todos[i].title);
+      sheetObject.cell(CellIndex.indexByString("B${i + 2}")).value = TextCellValue(widget.todos[i].date.toString());
+      sheetObject.cell(CellIndex.indexByString("C${i + 2}")).value = TextCellValue(widget.todos[i].isDone ? "완료" : "미완료");
+    }
+
+    // 엑셀 파일 저장 로직 구현 필요
+  }
+
+  Widget _buildFeedbackView() {
+    return Center(
+      child: ElevatedButton(
+        child: Text('피드백 보내기'),
+        onPressed: () async {
+          final Uri emailLaunchUri = Uri(
+            scheme: 'mailto',
+            path: 'redguy0814@gmail.com',
+            query: encodeQueryParameters(<String, String>{
+              'subject': 'All Care 앱 피드백',
+              'body': '여기에 피드백을 작성해주세요.'
+            }),
+          );
+          if (await canLaunch(emailLaunchUri.toString())) {
+            await launch(emailLaunchUri.toString());
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('이메일 앱을 열 수 없습니다.')),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  String? encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+  }
+  Widget _buildStatisticsView() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('통계', style: Theme.of(context).textTheme.headlineSmall),
+            SizedBox(height: 20),
+            _buildTodoCompletionChart(),
+            SizedBox(height: 20),
+            _buildNutritionIntakeChart(),
+            SizedBox(height: 20),
+            _buildCorrelationAnalysis(),
+            SizedBox(height: 20),
+            _buildRecommendations(),
+          ],
+        ),
+      ),
+    );
+  }Widget _buildTodoCompletionChart() {
     final completionRates = _calculateTodoCompletionRates();
     return Container(
       height: 200,
@@ -117,7 +265,7 @@ class MyPage extends StatelessWidget {
     final now = DateTime.now();
     return List.generate(7, (index) {
       final date = now.subtract(Duration(days: index));
-      final todosForDay = todos.where((todo) => isSameDay(todo.date, date)).toList();
+      final todosForDay = widget.todos.where((todo) => isSameDay(todo.date, date)).toList();
       if (todosForDay.isEmpty) return 0.0;
       final completedTodos = todosForDay.where((todo) => todo.isDone).length;
       return (completedTodos / todosForDay.length) * 100;
@@ -129,7 +277,7 @@ class MyPage extends StatelessWidget {
     final now = DateTime.now();
     return List.generate(7, (index) {
       final date = now.subtract(Duration(days: index));
-      final nutritionsForDay = nutritions.where((nutrition) => isSameDay(nutrition.date, date)).toList();
+      final nutritionsForDay = widget.nutritions.where((nutrition) => isSameDay(nutrition.date, date)).toList();
       if (nutritionsForDay.isEmpty) return 0.0;
       final takenNutritions = nutritionsForDay.where((nutrition) => nutrition.taken).length;
       return (takenNutritions / nutritionsForDay.length) * 100;
@@ -172,6 +320,9 @@ class MyPage extends StatelessWidget {
     }
   }
 }
+
+
+// 기존의 _buildStatisticsView() 및 관련 메서드들은 그대로 유지
 
 bool isSameDay(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;

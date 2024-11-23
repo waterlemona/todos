@@ -15,23 +15,27 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
 
+  static _MyAppState of(BuildContext context) => context.findAncestorStateOfType<_MyAppState>()!;
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void changeTheme(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    Color invertColor(Color color) {
-      return Color.fromARGB(
-        color.alpha,
-        255 - color.red,
-        255 - color.green,
-        255 - color.blue,
-      );
-    }
     return MaterialApp(
       title: 'All Care',
       theme: ThemeData(
@@ -43,12 +47,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        // 다크 모드의 다른 테마 설정
       ),
-      themeMode: ThemeMode.system, // 시스템 설정에 따라 테마 변경
-      //home: const MyHomePage(),
-       home: const LoginScreen()
-
+      themeMode: _themeMode,
+      home: const LoginScreen(),
     );
   }
 }
