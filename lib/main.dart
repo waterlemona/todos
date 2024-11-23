@@ -95,8 +95,10 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedDate: _selectedDay!,
         onNutritionAdded: _onNutritionAdded,
         onNutritionRemoved: _onNutritionRemoved,
+        userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
       ),
       MyPage(todos: _todoList, nutritions: _nutritionList),
+
     ];
   }
   bool _isAllTodosCompletedForDay(DateTime day) {
@@ -179,8 +181,13 @@ class _MyHomePageState extends State<MyHomePage> {
           _widgetOptions[1] = NutPage(
             selectedDate: selectedDay,
             onNutritionAdded: _onNutritionAdded,
-            onNutritionRemoved: _onNutritionRemoved,);
+            onNutritionRemoved: _onNutritionRemoved,
+            userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
+          );
+
+
         });
+
       },
       onFormatChanged: (format) {
         if (_calendarFormat != format) {
