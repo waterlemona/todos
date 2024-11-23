@@ -89,6 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     TextField(
                       controller: _emailController,
+                      style: TextStyle(color: Colors.black),
                       decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.check,
@@ -104,6 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
+                      style: TextStyle(color: Colors.black),
                       decoration: const InputDecoration(
                         suffixIcon: Icon(
                           Icons.visibility_off,
