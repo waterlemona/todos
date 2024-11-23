@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // 로그인 성공
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyHomePage()),
+        MaterialPageRoute(builder: (context) => MyHomePage(userEmail: userCredential.user!.email!)),
       );
     } on FirebaseAuthException catch (e) {
       // 로그인 실패

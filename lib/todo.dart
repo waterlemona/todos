@@ -14,6 +14,8 @@ class Todo {
   bool isDone;
   List<DateTime>? futureDates;
   List<String> repeatDays;
+  String userEmail;
+
  //userid받아오는 섹션 추가해야함
   Todo({
     this.id = '',
@@ -25,6 +27,7 @@ class Todo {
     this.isDone = false,
     this.futureDates,
     this.repeatDays = const [],
+    required this.userEmail,
   });
 
   // Firestore에서 가져온 데이터를 Map으로 변환
@@ -38,6 +41,7 @@ class Todo {
           : null,
       'repeat': repeat,
       'isDone': isDone,
+      'userEmail': userEmail,
     };
   }
 
@@ -57,6 +61,7 @@ class Todo {
           : null,
       repeat: data['repeat'],
       isDone: data['isDone'],
+      userEmail: data['userEmail'] ?? '',
     );
   }
 }
@@ -67,12 +72,14 @@ class TodoPage extends StatefulWidget {
   final Function(Todo) onTodoAdded;
   final Function(Todo) onTodoRemoved;
   final Function(List<Todo>) onTodoListChanged; // 할 일 목록 변경 콜백
+  final String userEmail; // 추가된 부분
 
   TodoPage({
     required this.selectedDate,
     required this.onTodoAdded,
     required this.onTodoRemoved,
     required this.onTodoListChanged,
+    required this.userEmail, // 추가된 부분
   });
 
   @override
@@ -157,8 +164,9 @@ class _TodoPageState extends State<TodoPage> {
   // Firestore에서 할 일 목록 읽기
   Future<void> _loadTodos() async {
     final todoCollection = FirebaseFirestore.instance.collection('todos');
-    QuerySnapshot snapshot = await todoCollection.get();
-
+    QuerySnapshot snapshot = await todoCollection
+        .where('userEmail', isEqualTo: widget.userEmail) // 현재 사용자의 Todo만 가져오기
+        .get();
     setState(() {
       _todoList = snapshot.docs
           .map((doc) => Todo.fromFirestore(doc))  // Firestore에서 Todo 객체로 변환
@@ -487,6 +495,7 @@ class _TodoPageState extends State<TodoPage> {
         alarmTime: todo.alarmTime,
         repeat: todo.repeat,
         repeatDays: todo.repeatDays,
+        userEmail: widget.userEmail,
       );
       futureTodos.add(newTodo);
       await _addTodoToFirestore(newTodo); // 새로운 할 일을 Firestore에 추가
@@ -626,6 +635,7 @@ class _TodoPageState extends State<TodoPage> {
                   Todo newTodo = Todo(
                     title: title,
                     date: widget.selectedDate,
+                    userEmail: widget.userEmail,
                   );
 
                   try {
@@ -679,6 +689,7 @@ class _TodoPageState extends State<TodoPage> {
         memo: originalTodo.memo,
         alarmTime: originalTodo.alarmTime,
         repeat: originalTodo.repeat,
+        userEmail: originalTodo.userEmail,
       );
       setState(() {
         _todoList.add(newTodo);
