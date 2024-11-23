@@ -9,6 +9,7 @@ class Nutrition {
   double takenDosage;
   DateTime date;
   bool taken;
+  String userEmail;
 
   Nutrition({
     this.id = '',
@@ -18,6 +19,7 @@ class Nutrition {
     required this.date,
     this.takenDosage = 0,
     this.taken = false,
+    required this.userEmail,
   });
 
   double get dosagePerCount => totalDosage / count;
@@ -36,6 +38,8 @@ class Nutrition {
       date: (data['date'] as Timestamp).toDate(),
       takenDosage: data['takenDosage'].toDouble(),
       taken: data['taken'],
+      userEmail: data['userEmail'],
+
     );
   }
 
@@ -47,6 +51,7 @@ class Nutrition {
       'takenDosage': takenDosage,
       'date': date,
       'taken': taken,
+      'userEmail': userEmail,
     };
   }
 }
@@ -55,11 +60,13 @@ class NutPage extends StatefulWidget {
   final DateTime selectedDate;
   final Function(Nutrition) onNutritionAdded;
   final Function(Nutrition) onNutritionRemoved;
+  final String userEmail;
 
   NutPage({
     required this.selectedDate,
     required this.onNutritionAdded,
     required this.onNutritionRemoved,
+    required this.userEmail,
   });
 
   @override
@@ -80,7 +87,7 @@ class _NutPageState extends State<NutPage> {
 
   Future<void> _loadNutritions() async {
     final nutritionCollection = FirebaseFirestore.instance.collection('nutritions');
-    QuerySnapshot snapshot = await nutritionCollection.get();
+    QuerySnapshot snapshot = await nutritionCollection.where('userEmail',isEqualTo: widget.userEmail).get();
 
     setState(() {
       _nutritions = snapshot.docs
@@ -316,6 +323,7 @@ class _NutPageState extends State<NutPage> {
                     totalDosage: totalDosage,
                     count: count,
                     date: widget.selectedDate,
+                    userEmail:  widget.userEmail,
                   );
                   _addNutritionToFirestore(newNutrition);
                   widget.onNutritionAdded(newNutrition);
