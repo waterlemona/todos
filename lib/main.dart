@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -19,6 +20,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -44,18 +46,20 @@ class MyApp extends StatelessWidget {
         // 다크 모드의 다른 테마 설정
       ),
       themeMode: ThemeMode.system, // 시스템 설정에 따라 테마 변경
-      home: const MyHomePage(),
-      // home: const LoginScreen()
+      //home: const MyHomePage(),
+       home: const LoginScreen()
 
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  final String userEmail;
+
+  const MyHomePage({Key? key, required this.userEmail}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -85,6 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
             _todoList = updatedList;
           });
         },
+        userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
       ),
       NutPage(
         selectedDate: _selectedDay!,
@@ -168,6 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 _todoList = updatedList;
               });
             },
+            userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
           );
           // Nut 페이지의 선택된 날짜 업데이트
           _widgetOptions[1] = NutPage(
