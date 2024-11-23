@@ -643,7 +643,6 @@ class _TodoPageState extends State<TodoPage> {
                     setState(() {
                       _todoList.add(newTodo);
                     });
-                    widget.onTodoAdded(newTodo);
                     _updateTodoList();
                     Navigator.of(context).pop();
                   } catch (e) {
