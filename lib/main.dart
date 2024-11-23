@@ -53,7 +53,23 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+class Nutrition {
+  String id;
+  String name;
+  int totalDosage;
+  int count;
+  Map<String, bool> takenByDate;
+  String userEmail;
 
+  Nutrition({
+    this.id = '',
+    required this.name,
+    required this.totalDosage,
+    required this.count,
+    required this.userEmail,
+    Map<String, bool>? takenByDate,
+  }) : this.takenByDate = takenByDate ?? {};
+}
 class MyHomePage extends StatefulWidget {
   final String userEmail;
 
@@ -94,11 +110,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       NutPage(
         selectedDate: _selectedDay!,
-        onNutritionAdded: _onNutritionAdded,
-        onNutritionRemoved: _onNutritionRemoved,
         userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
       ),
-      MyPage(todos: _todoList, nutritions: _nutritionList),
 
     ];
   }
@@ -133,14 +146,16 @@ class _MyHomePageState extends State<MyHomePage> {
   // Nutrition 제거 콜백
   void _onNutritionRemoved(Nutrition nutrition) {
     setState(() {
-      _nutritionList.remove(nutrition);
+      _nutritionList.removeWhere((n) => n.id == nutrition.id);
       _updateMyPage();
     });
   }
 
   // MyPage 업데이트
   void _updateMyPage() {
-    _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
+    setState(() {
+      //_widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
+    });
   }
 
   void _onItemTapped(int index) {
@@ -181,8 +196,6 @@ class _MyHomePageState extends State<MyHomePage> {
           // Nut 페이지의 선택된 날짜 업데이트
           _widgetOptions[1] = NutPage(
             selectedDate: selectedDay,
-            onNutritionAdded: _onNutritionAdded,
-            onNutritionRemoved: _onNutritionRemoved,
             userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
           );
 
