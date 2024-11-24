@@ -9,6 +9,41 @@ import 'package:excel/excel.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:typed_data';
 import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+String getUserEmail() {
+  final user = FirebaseAuth.instance.currentUser;
+  return user?.email ?? ''; // 사용자가 로그인되어 있지 않으면 빈 문자열을 반환
+}
+
+Future<List<Todo>> _getTodosFromFirestore(String userEmail) async {
+  try {
+    var snapshot = await FirebaseFirestore.instance
+        .collection('todos')
+        .where('userEmail', isEqualTo: userEmail)  // userEmail을 기준으로 필터링
+        .get();
+
+    // 데이터가 존재하면 Todo 객체로 변환 / excel에 사용
+    return snapshot.docs.map((doc) {
+      return Todo(
+        title: doc['title'] ?? '',  // title이 null일 경우 빈 문자열로 처리
+        date: (doc['date'] as Timestamp?)?.toDate() ?? DateTime.now(),  // date가 null일 경우 현재 시간으로 처리
+        isDone: doc['isDone'] ?? false,  // isDone이 null일 경우 false로 처리
+        userEmail: doc['userEmail']
+      );
+    }).toList();
+  } catch (e) {
+    print('Error getting todos: $e');
+    return [];
+  }
+}
+
+
 
 
 class MyPage extends StatefulWidget {
@@ -126,54 +161,75 @@ class _MyPageState extends State<MyPage> {
         ),
         ElevatedButton(
           child: Text('엑셀로 다운로드'),
-          onPressed: _exportToExcel,
-        ),
+          onPressed: () async {
+            String userEmail = getUserEmail(); // 로그인한 사용자의 이메일 가져오기
+            if (userEmail.isNotEmpty) {
+              await _exportToExcelMobile(userEmail); // userEmail을 인자로 전달
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('로그인된 사용자가 없습니다.')),
+              );
+            }
+          },
+        )
       ],
     );
   }
-  void _exportToExcelMobile() async {
-    var excel = Excel.createExcel();
-    Sheet sheetObject = excel['Sheet1'];
-    sheetObject.cell(CellIndex.indexByString("A1")).value = TextCellValue("제목");
-    sheetObject.cell(CellIndex.indexByString("B1")).value = TextCellValue("날짜");
-    sheetObject.cell(CellIndex.indexByString("C1")).value = TextCellValue("완료 여부");
+  Future<void> _exportToExcelMobile(userEmail) async {
+    String userEmail = getUserEmail(); // 로그인한 사용자의 이메일 가져오기
+    if (userEmail.isNotEmpty) {
+      // userEmail을 인자로 전달
+      List<Todo> todos = await _getTodosFromFirestore(userEmail);
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Sheet1'];
 
-    for (int i = 0; i < widget.todos.length; i++) {
-      sheetObject.cell(CellIndex.indexByString("A${i + 2}")).value = TextCellValue(widget.todos[i].title);
-      sheetObject.cell(CellIndex.indexByString("B${i + 2}")).value = TextCellValue(widget.todos[i].date.toString());
-      sheetObject.cell(CellIndex.indexByString("C${i + 2}")).value = TextCellValue(widget.todos[i].isDone ? "완료" : "미완료");
+      // 헤더 추가
+      sheetObject.cell(CellIndex.indexByString("A1")).value = TextCellValue("제목");
+      sheetObject.cell(CellIndex.indexByString("B1")).value = TextCellValue("날짜");
+      sheetObject.cell(CellIndex.indexByString("C1")).value = TextCellValue("완료 여부");
+
+      // 데이터 추가
+      for (int i = 0; i < todos.length; i++) {
+        sheetObject.cell(CellIndex.indexByString("A${i + 2}")).value = TextCellValue(todos[i].title);
+        sheetObject.cell(CellIndex.indexByString("B${i + 2}")).value = TextCellValue(todos[i].date.toString());
+        sheetObject.cell(CellIndex.indexByString("C${i + 2}")).value = TextCellValue(todos[i].isDone ? "완료" : "미완료");
+      }
+
+      final fileBytes = excel.save()!;
+
+      // 임시 파일 저장
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/todos.xlsx');
+      await file.writeAsBytes(fileBytes);
+
+      // 파일 공유
+      await Share.share('엑셀 파일을 다운로드하려면 이 링크를 클릭하세요: ${file.path}');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('로그인된 사용자가 없습니다.')),
+      );
     }
-
-    final fileBytes = excel.save()!;
-
-    // 공유하기
-    await Share.shareXFiles([
-      XFile.fromData(
-        Uint8List.fromList(fileBytes),
-        name: 'todos.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      )
-    ]);
   }
 
-  void _exportToExcel() {
-    var excel = Excel.createExcel();
-    Sheet sheetObject = excel['Sheet1'];
 
-    // 헤더 추가
-    sheetObject.cell(CellIndex.indexByString("A1")).value = TextCellValue("제목");
-    sheetObject.cell(CellIndex.indexByString("B1")).value = TextCellValue("날짜");
-    sheetObject.cell(CellIndex.indexByString("C1")).value = TextCellValue("완료 여부");
 
-    for (int i = 0; i < widget.todos.length; i++) {
-      sheetObject.cell(CellIndex.indexByString("A${i + 2}")).value = TextCellValue(widget.todos[i].title);
-      sheetObject.cell(CellIndex.indexByString("B${i + 2}")).value = TextCellValue(widget.todos[i].date.toString());
-      sheetObject.cell(CellIndex.indexByString("C${i + 2}")).value = TextCellValue(widget.todos[i].isDone ? "완료" : "미완료");
+// 서버에 엑셀 파일 업로드하는 함수
+  Future<String?> _uploadExcelFile(File file) async {
+    final uri = Uri.parse('https://your-server.com/upload');  // 서버 URL
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      final jsonResponse = jsonDecode(responseBody);
+      return jsonResponse['downloadUrl'];  // 서버에서 제공한 다운로드 URL
+    } else {
+      print('파일 업로드 실패: ${response.statusCode}');
+      return null;
     }
-    final fileBytes = excel.save();
-    File('할 일.xlsx').writeAsBytesSync(fileBytes!);
   }
-
   Widget _buildFeedbackView() {
     return Center(
       child: ElevatedButton(
