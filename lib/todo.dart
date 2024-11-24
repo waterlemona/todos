@@ -114,17 +114,21 @@ class _TodoPageState extends State<TodoPage> {
       priority: Priority.high,
       showWhen: true,
     );
+
     var platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
     );
 
-    await flutterLocalNotificationsPlugin.schedule(
-      todo.hashCode,
-      'Todo Reminder',
-      todo.title,
-      scheduledNotificationDateTime,
-      platformChannelSpecifics,
-    );
+    // 아래 schedule 메소드 호출을 주석 처리합니다.
+    /*
+  await flutterLocalNotificationsPlugin.schedule(
+    todo.hashCode,
+    'Todo Reminder',
+    todo.title,
+    scheduledNotificationDateTime,
+    platformChannelSpecifics,
+  );
+  */
   }
 
   Future<void> _initializeNotifications() async {

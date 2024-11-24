@@ -53,23 +53,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-class Nutrition {
-  String id;
-  String name;
-  int totalDosage;
-  int count;
-  Map<String, bool> takenByDate;
-  String userEmail;
 
-  Nutrition({
-    this.id = '',
-    required this.name,
-    required this.totalDosage,
-    required this.count,
-    required this.userEmail,
-    Map<String, bool>? takenByDate,
-  }) : this.takenByDate = takenByDate ?? {};
-}
 class MyHomePage extends StatefulWidget {
   final String userEmail;
 
@@ -112,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedDate: _selectedDay!,
         userEmail: FirebaseAuth.instance.currentUser?.email ?? '',
       ),
-
+      MyPage(todos: _todoList, nutritions: _nutritionList),
     ];
   }
   bool _isAllTodosCompletedForDay(DateTime day) {
@@ -154,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // MyPage 업데이트
   void _updateMyPage() {
     setState(() {
-      //_widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
+      _widgetOptions[2] = MyPage(todos: _todoList, nutritions: _nutritionList);
     });
   }
 
