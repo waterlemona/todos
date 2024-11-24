@@ -101,6 +101,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextField(
+                      style: TextStyle(color: Colors.black),
                       controller: _emailController,
                       decoration: const InputDecoration(
                         suffixIcon: Icon(
@@ -115,6 +116,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                     TextField(
+                      style: TextStyle(color: Colors.black),
                       controller: _usernameController,
                       decoration: const InputDecoration(
                         suffixIcon: Icon(
@@ -129,6 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                     TextField(
+                      style: TextStyle(color: Colors.black),
                       controller: _passwordController,
                       obscureText: true,
                       decoration: const InputDecoration(
@@ -144,6 +147,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                     TextField(
+                      style: TextStyle(color: Colors.black),
                       controller: _confirmPasswordController,
                       obscureText: true,
                       decoration: const InputDecoration(
